@@ -13,7 +13,10 @@ tags:
 
 # List of files / directories with C sources. No slashes at the end of dir names.
 sources:
-  - src
+  - src/nimcache
+
+cdefs:
+  NIM_INTBITS: 32
 
 # List of dirs. Files from these dirs will be copied to the device filesystem
 filesystem:
@@ -55,7 +58,9 @@ libs:
   - origin: https://github.com/mongoose-os-libs/rpc-uart
   - origin: https://github.com/mongoose-os-libs/wifi
   - origin: https://github.com/mongoose-os-libs/arduino-adafruit-ssd1306
+  - origin: https://github.com/mongoose-os-libs/dht
   - origin: https://github.com/mongoose-os-libs/mjs
+  - origin: https://github.com/mongoose-os-libs/neopixel
 
 # Used by the mos tool to catch mos binaries incompatible with this file format
 manifest_version: 2017-05-18

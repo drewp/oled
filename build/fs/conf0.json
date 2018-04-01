@@ -1,24 +1,17 @@
 {
-  "sntp": {
-    "enable": true, 
-    "server": "pool.ntp.org", 
-    "retry_min": 1, 
-    "retry_max": 30, 
-    "update_interval": 7200
-  }, 
   "device": {
     "id": "esp32_??????", 
     "password": ""
   }, 
   "debug": {
     "udp_log_addr": "", 
-    "mbedtls_level": 0, 
     "level": 2, 
     "filter": "", 
     "stdout_uart": 0, 
     "stderr_uart": 0, 
     "factory_reset_gpio": -1, 
-    "mg_mgr_hexdump_file": ""
+    "mg_mgr_hexdump_file": "", 
+    "mbedtls_level": 0
   }, 
   "sys": {
     "mount": {
@@ -28,8 +21,9 @@
       "fs_type": "", 
       "fs_opts": ""
     }, 
+    "tz_spec": "", 
     "wdt_timeout": 30, 
-    "tz_spec": ""
+    "pref_ota_lib": ""
   }, 
   "conf_acl": "*", 
   "spi": {
@@ -47,6 +41,7 @@
     "enable": false, 
     "freq": 100000, 
     "debug": false, 
+    "unit_no": 0, 
     "sda_gpio": 32, 
     "scl_gpio": 33
   }, 
@@ -107,6 +102,7 @@
       "dhcp_end": "192.168.4.100", 
       "trigger_on_gpio": -1, 
       "disable_after": 0, 
+      "hostname": "", 
       "keep_enabled": true
     }
   }

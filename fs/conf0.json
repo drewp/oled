@@ -7,7 +7,7 @@
     "update_interval": 7200
   }, 
   "device": {
-    "id": "esp32_??????", 
+    "id": "thermostat", 
     "password": ""
   }, 
   "debug": {
