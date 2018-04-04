@@ -16,10 +16,9 @@ GPIO.set_mode(25, GPIO.MODE_OUTPUT);
 // from conf0.js, i2c sda is on 4; scl is on 15
 // display reset is 16
 
-    GPIO.set_mode(36,  GPIO.MODE_INPUT);  //sw
-    GPIO.set_mode(37,  GPIO.MODE_INPUT);  //d
-    GPIO.set_mode(38,  GPIO.MODE_INPUT);  //clk
-
+GPIO.set_mode(36,  GPIO.MODE_INPUT);  //sw
+GPIO.set_mode(37,  GPIO.MODE_INPUT);  //d
+GPIO.set_mode(38,  GPIO.MODE_INPUT);  //clk
 
 function welcomeBlink() {
     for( let i=0; i<3; i++) {
@@ -27,23 +26,10 @@ function welcomeBlink() {
         GPIO.write(25, 0); Sys.usleep(100000);
     }
 }
-let pin = 22, numPixels = 8;//, colorOrder = NeoPixel.GRB;
 
-Log.info('img');
-GPIO.set_mode(pin, GPIO.MODE_OUTPUT);
-led_init(pin, 8);
+led_init(/*pin=*/22, /*numPixels=*/8);
 play_led_image('img_spin.bin');
 Log.info('img done');
-
-
-
-function leds(pos) {
-    return;
-    for (let i=0; i<8; i++) {
-        strip.setPixel(i, i === pos ? 5 : 0, 0, 0);
-    }
-    strip.show();
-}
 
 welcomeBlink();
 
