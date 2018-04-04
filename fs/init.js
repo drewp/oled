@@ -4,10 +4,10 @@ load('api_arduino_ssd1306.js');
 load('api_timer.js');
 load('api_dht.js');
 load('api_log.js');
-let NimMain = ffi('NimMain');
 let led_init = ffi('void led_init(int, int)');
 let play_led_image = ffi('int play_led_image(char*)');
 
+let NimMain = ffi('void NimMain()');
 NimMain()
 
 // pin5 solder is bad

@@ -1,6 +1,7 @@
 from fabric.api import env
 from subprocess import check_call
 import json
+
 env.hosts = ['localhost']
 
 def mos(*args):
@@ -29,13 +30,20 @@ def console():
     mos('console')
 
 def flash():
-    check_call(['nim', 'compile', '-d:release', 'src/led.nim'])
-    for f in ['/usr/lib/nim/nimbase.h']:
+    check_call(['nim-0.18.0/bin/nim', 'compile',
+                '--cpu:arm',
+                '--os:standalone',
+                '--deadCodeElim:on',
+                # --gc:refc|v2|markAndSweep|boehm|go|none|regions
+                '--gc:stack',
+                '--compileOnly',
+                '--noMain',
+                '--verbosity:2',
+                '-d:release',
+                '-d:StandaloneHeapSize=1024',
+                'src/led.nim'])
+    for f in ['nim-0.18.0/lib/nimbase.h']:
         check_call(['cp', f, 'src/nimcache'])
-    for f in ['src/nimcache/led.c', 'src/nimcache/stdlib_system.c']:
-        txt = open(f).read()
-        txt = txt.replace('#define NIM_INTBITS 16', '#define NIM_INTBITS 32')
-        open(f, 'w').write(txt)
     open('src/nimcache/main.c', 'w').write('// empty\n')
     mos('build', '--local')
     mos('flash', 'build/fw.zip')

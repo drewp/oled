@@ -1,3 +1,4 @@
+import strutils
 
 type
   mgos_app_init_result* {.size: sizeof(cint).} = enum
@@ -6,14 +7,12 @@ type
 const O_RDONLY: cint = 0
 type
   mgos_gpio_mode* {.size: sizeof(cint).} = enum
-    MGOS_GPIO_MODE_INPUT = 0, MGOS_GPIO_MODE_OUTPUT = 1, MGOS_GPIO_MODE_OUTPUT_OD = 2 ##  open-drain output
-
+    MGOS_GPIO_MODE_INPUT = 0, MGOS_GPIO_MODE_OUTPUT = 1, MGOS_GPIO_MODE_OUTPUT_OD = 2
 
 type
   mgos_gpio_pull_type* {.size: sizeof(cint).} = enum
     MGOS_GPIO_PULL_NONE = 0,    ##  floating
     MGOS_GPIO_PULL_UP = 1, MGOS_GPIO_PULL_DOWN = 2
-
 
 type
   mgos_gpio_int_mode* {.size: sizeof(cint).} = enum
@@ -22,24 +21,19 @@ type
     MGOS_GPIO_INT_EDGE_ANY = 3, ##  any edge - positive or negative
     MGOS_GPIO_INT_LEVEL_HI = 4, ##  high voltage level
     MGOS_GPIO_INT_LEVEL_LO = 5
-proc mgos_gpio_set_mode*(pin: cint; mode: mgos_gpio_mode): bool {.
-    importc: "mgos_gpio_set_mode", header: "mgos_gpio.h".}
 
-proc mgos_gpio_set_pull*(pin: cint; pull: mgos_gpio_pull_type): bool {.
-    importc: "mgos_gpio_set_pull", header: "mgos_gpio.h".}
+proc mgos_gpio_set_mode*(pin: cint; mode: mgos_gpio_mode): bool {. importc: "mgos_gpio_set_mode", header: "mgos_gpio.h".}
 
-proc mgos_gpio_read*(pin: cint): bool {.importc: "mgos_gpio_read",
-                                    header: "mgos_gpio.h".}
+proc mgos_gpio_set_pull*(pin: cint; pull: mgos_gpio_pull_type): bool {. importc: "mgos_gpio_set_pull", header: "mgos_gpio.h".}
 
-proc mgos_gpio_write*(pin: cint; level: bool) {.importc: "mgos_gpio_write",
-    header: "mgos_gpio.h".}
+proc mgos_gpio_read*(pin: cint): bool {.importc: "mgos_gpio_read", header: "mgos_gpio.h".}
 
-proc mgos_vfs_open*(filename: cstring; flags: cint; mode: cint): cint {.
-    importc: "mgos_vfs_open", header: "mgos_vfs.h".}
+proc mgos_gpio_write*(pin: cint; level: bool) {.importc: "mgos_gpio_write", header: "mgos_gpio.h".}
+
+proc mgos_vfs_open*(filename: cstring; flags: cint; mode: cint): cint {. importc: "mgos_vfs_open", header: "mgos_vfs.h".}
 
 proc mgos_vfs_close*(vfd: cint): cint {.importc: "mgos_vfs_close", header: "mgos_vfs.h".}
-proc mgos_vfs_read*(vfd: cint; dst: pointer; len: csize): csize {.
-    importc: "mgos_vfs_read", header: "mgos_vfs.h".}
+proc mgos_vfs_read*(vfd: cint; dst: pointer; len: csize): csize {. importc: "mgos_vfs_read", header: "mgos_vfs.h".}
 proc mgos_usleep*(usecs: uint32) {.importc: "mgos_usleep", header: "mgos_system.h".}
 
 type
@@ -49,32 +43,50 @@ type
 
 proc mgos_bitbang_write_bits*(gpio: cint; delay_unit: mgos_delay_unit; t0h: cint;
                               t0l: cint; t1h: cint; t1l: cint; data: ptr uint8;
-                              len: csize) {.importc: "mgos_bitbang_write_bits",
-      header: "mgos_bitbang.h".}
-  ## 
+                              len: csize) {.importc: "mgos_bitbang_write_bits", header: "mgos_bitbang.h".}
 
+proc printf(fmt: cstring) {.importc: "mgos_cd_printf", varargs, header: "mgos_core_dump.h".}
 
 #########
-    
+
+proc log(msg: string) =
+  printf(msg)
+  printf("\n")
+
+log("hello nim")
+
+  
 proc mgos_app_init*(): mgos_app_init_result =
   return MGOS_APP_INIT_SUCCESS
-  
+
+
 type
   led_playback {.exportc.} = object
     pin: cint
     numPixels: cint
     filename: cstring
     img_fd: cint
-    t_arg: uint32
 
 var g_led_playback*: led_playback
 
-proc led_init*(pin: cint; numPixels: cint): led_playback {.exportc.} =
-  result.pin = pin
-  result.numPixels = numPixels
-  result.filename = nil
+proc led_init*(pin: cint; numPixels: cint) {.exportc.} =
+  g_led_playback.pin = pin
+  g_led_playback.numPixels = numPixels
+  g_led_playback.filename = nil
+  log("wrote g")
+  let a = alloc(100)
 
-  result.t_arg = (0x0'u16 shl 24) or (0x0'u16 shl 16) or (0x1'u16 shl 8) or 0x1'u16
+  log("wrote result")
+
+  if g_led_playback.numPixels == 8:
+    log("8")
+
+  if intToStr(g_led_playback.numPixels) == "8":
+    log("eight")
+  log("p")
+  log(intToStr(g_led_playback.numPixels))
+  dealloc(a)
+
 
 proc led_open_file(filename: cstring) =
   if g_led_playback.filename != nil:
@@ -85,16 +97,28 @@ proc led_open_file(filename: cstring) =
   g_led_playback.filename = filename
 
 proc play_led_image*(filename: cstring) {.exportc.} =
+  log("open file")
   led_open_file(filename)
-  var n: csize
-  var buf: ptr uint8
-  while mgos_vfs_read(g_led_playback.img_fd, buf, n) > 0:
+  log("caalc n")
+  log(format("1 n = $#", 24))
+  let n = g_led_playback.numPixels * 3
+
+  log(format("n = $#", n))
+  var buf = newSeq[uint8](n)
+  log("got buf")
+
+  while mgos_vfs_read(g_led_playback.img_fd, buf[0].addr, buf.len) > 0:
+    log("read")
     mgos_gpio_write(g_led_playback.pin, false)
     mgos_usleep(60)
     mgos_bitbang_write_bits(g_led_playback.pin, MGOS_DELAY_100NSEC,
-                               3, 8, 8, 6, buf, n)
+                            3, 8, 8, 6,
+                            buf[0].addr,
+                            buf.len)
     mgos_gpio_write(g_led_playback.pin, false)
     mgos_usleep(60)
     mgos_gpio_write(g_led_playback.pin, true)
 
     mgos_usleep(33000'u32)
+
+

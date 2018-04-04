@@ -2,3 +2,5 @@
 /deps/
 /src/nimcache/
 *.pyc
+nim-0.18.0/
+
