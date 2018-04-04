@@ -15,9 +15,6 @@ tags:
 sources:
   - src/nimcache
 
-cdefs:
-  NIM_INTBITS: 32
-
 cflags:
   - "-Wno-error=unused-value"
   - "-Wno-error=parentheses"

@@ -1,4 +1,5 @@
 import strutils
+import strformat
 
 type
   mgos_app_init_result* {.size: sizeof(cint).} = enum
@@ -50,15 +51,12 @@ proc printf(fmt: cstring) {.importc: "mgos_cd_printf", varargs, header: "mgos_co
 #########
 
 proc log(msg: string) =
-  printf(msg)
-  printf("\n")
+  printf(msg & "\n")
 
 log("hello nim")
-
   
 proc mgos_app_init*(): mgos_app_init_result =
   return MGOS_APP_INIT_SUCCESS
-
 
 type
   led_playback {.exportc.} = object
@@ -73,20 +71,6 @@ proc led_init*(pin: cint; numPixels: cint) {.exportc.} =
   g_led_playback.pin = pin
   g_led_playback.numPixels = numPixels
   g_led_playback.filename = nil
-  log("wrote g")
-  let a = alloc(100)
-
-  log("wrote result")
-
-  if g_led_playback.numPixels == 8:
-    log("8")
-
-  if intToStr(g_led_playback.numPixels) == "8":
-    log("eight")
-  log("p")
-  log(intToStr(g_led_playback.numPixels))
-  dealloc(a)
-
 
 proc led_open_file(filename: cstring) =
   if g_led_playback.filename != nil:
@@ -97,18 +81,13 @@ proc led_open_file(filename: cstring) =
   g_led_playback.filename = filename
 
 proc play_led_image*(filename: cstring) {.exportc.} =
-  log("open file")
   led_open_file(filename)
-  log("caalc n")
-  log(format("1 n = $#", 24))
   let n = g_led_playback.numPixels * 3
+  log(fmt"n = {n}")
 
-  log(format("n = $#", n))
   var buf = newSeq[uint8](n)
-  log("got buf")
 
   while mgos_vfs_read(g_led_playback.img_fd, buf[0].addr, buf.len) > 0:
-    log("read")
     mgos_gpio_write(g_led_playback.pin, false)
     mgos_usleep(60)
     mgos_bitbang_write_bits(g_led_playback.pin, MGOS_DELAY_100NSEC,
