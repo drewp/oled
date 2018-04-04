@@ -4,8 +4,13 @@ load('api_arduino_ssd1306.js');
 load('api_timer.js');
 load('api_dht.js');
 load('api_log.js');
-let led_init = ffi('void led_init(int, int)');
-let play_led_image = ffi('int play_led_image(char*)');
+
+let _newLedPlayback = ffi('void* newLedPlayback(int, int)');
+let _playImage = ffi('void playImage(void*, char*)');
+function LedPlayback(pin, numLeds) {
+    this._c = _newLedPlayback(pin, numLeds);
+    this.playImage = function(filename) { _playImage(this._c, filename); };
+}
 
 let NimMain = ffi('void NimMain()');
 NimMain()
@@ -27,8 +32,8 @@ function welcomeBlink() {
     }
 }
 
-led_init(/*pin=*/22, /*numPixels=*/8);
-play_led_image('img_spin.bin');
+let lp = newLedPlayback(/*pin=*/22, /*numPixels=*/8);
+lp.playImage('img_spin.bin');
 Log.info('img done');
 
 welcomeBlink();

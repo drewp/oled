@@ -17,50 +17,48 @@ log("hello nim")
 proc mgos_app_init*(): mgos_app_init_result =
   return MGOS_APP_INIT_SUCCESS
 
-type
-  led_playback {.exportc.} = object
-    pin: cint
-    numPixels: cint
-    filename: cstring
-    img_fd: cint
+type LedPlayback {.exportc.} = object of RootObj
+  pin: cint
+  numPixels: cint
+  filename: cstring
+  img_fd: cint
 
-var g_led_playback*: led_playback
-
-proc led_init*(pin: cint; numPixels: cint) {.exportc.} =
+proc newLedPlayback*(pin: cint, numPixels: cint): ref LedPlayback {.exportc.} =
+  result.new()
+  result.pin = pin
+  result.numPixels = numPixels
+  result.filename = nil
   discard mgos_gpio_set_mode(pin, MGOS_GPIO_MODE_OUTPUT)
-  g_led_playback.pin = pin
-  g_led_playback.numPixels = numPixels
-  g_led_playback.filename = nil
 
-proc led_open_file(filename: cstring) =
-  if g_led_playback.filename != nil:
-    if mgos_vfs_close(g_led_playback.img_fd) > 0:
+proc openFile(this: var LedPlayback, filename: cstring) =
+  if this.filename != nil:
+    if mgos_vfs_close(this.img_fd) > 0:
       return
 
-  g_led_playback.img_fd = mgos_vfs_open(filename, O_RDONLY, 0)
-  g_led_playback.filename = filename
+  this.img_fd = mgos_vfs_open(filename, O_RDONLY, 0)
+  this.filename = filename
 
-proc play_led_image*(filename: cstring) {.exportc.} =
-  led_open_file(filename)
-  let n = g_led_playback.numPixels * 3
+proc playImage*(this: var LedPlayback, filename: cstring) {.exportc.} =
+  this.openFile(filename)
+  let n = this.numPixels * 3
   log(fmt"n = {n}")
 
   var buf = newSeq[uint8](n)
 
   var frames = 0
-  while mgos_vfs_read(g_led_playback.img_fd, buf[0].addr, buf.len) > 0:
-    mgos_gpio_write(g_led_playback.pin, false)
+  while mgos_vfs_read(this.img_fd, buf[0].addr, buf.len) > 0:
+    mgos_gpio_write(this.pin, false)
     mgos_usleep(60)
-    mgos_bitbang_write_bits(g_led_playback.pin, MGOS_DELAY_100NSEC,
+    mgos_bitbang_write_bits(this.pin, MGOS_DELAY_100NSEC,
                             3, 8, 8, 6,
                             buf[0].addr,
                             buf.len)
-    mgos_gpio_write(g_led_playback.pin, false)
+    mgos_gpio_write(this.pin, false)
     mgos_usleep(60)
-    mgos_gpio_write(g_led_playback.pin, true)
+    mgos_gpio_write(this.pin, true)
 
     mgos_usleep(33000'u32)
-    frames += 1
+    inc frames
     if frames > 10:
        break
 
