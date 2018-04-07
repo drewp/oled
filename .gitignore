@@ -3,4 +3,4 @@
 /src/nimcache/
 *.pyc
 nim-0.18.0/
-
+/src/*_test
