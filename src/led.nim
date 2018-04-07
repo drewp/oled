@@ -1,6 +1,7 @@
 import strutils
 import strformat
 import mgos
+from animated_strip import OutputStrip
 
 type
   mgos_app_init_result* {.size: sizeof(cint).} = enum
@@ -18,16 +19,18 @@ proc mgos_app_init*(): mgos_app_init_result =
   return MGOS_APP_INIT_SUCCESS
 
 type LedPlayback {.exportc.} = object of RootObj
-  pin: cint
-  numPixels: cint
-  filename: cstring
-  img_fd: cint
-
+    pin: cint
+    numPixels: cint
+    filename: cstring
+    img_fd: cint
+    strip: OutputStrip
+  
 proc newLedPlayback*(pin: cint, numPixels: cint): ref LedPlayback {.exportc.} =
   result.new()
   result.pin = pin
   result.numPixels = numPixels
   result.filename = nil
+  result.groups = initTable[GroupId, ScanGroup](4)
   discard mgos_gpio_set_mode(pin, MGOS_GPIO_MODE_OUTPUT)
 
 proc openFile(this: var LedPlayback, filename: cstring) =
@@ -37,7 +40,7 @@ proc openFile(this: var LedPlayback, filename: cstring) =
 
   this.img_fd = mgos_vfs_open(filename, O_RDONLY, 0)
   this.filename = filename
-
+    
 proc playImage*(this: var LedPlayback, filename: cstring) {.exportc.} =
   this.openFile(filename)
   let n = this.numPixels * 3

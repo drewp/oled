@@ -50,14 +50,20 @@ def flash():
     config()
     push()
     
-def test():
+def test(mod):
     check_call(['nim-0.18.0/bin/nim', 'c',
                 '--hint[Conf]:off',
                 '--hint[Processing]:off',
                 '-d:release',
                 '--gc:stack',
                 '--deadCodeElim:on',
-                '-r', 'src/animated_strip_test',
-                'animated_strip::'])
-    check_call(['indent', '-l150', 'src/nimcache/animated_strip.c'])
+                '-r', 'src/%s_test' % mod,
+                '%s::' % mod])
+    check_call(['indent', '-l150', 'src/nimcache/%s.c' % mod])
     
+
+def test_animated_strip():
+    test('animated_strip')
+    
+def test_images():
+    test('images')

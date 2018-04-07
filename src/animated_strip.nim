@@ -2,14 +2,10 @@ import tables
 import sequtils
 import colors
 import options
+import strformat
 
+import types
 import images
-
-type Millis* = distinct int
-proc `+` (x, y: Millis): Millis {.borrow.}
-proc `-` (x, y: Millis): Millis {.borrow.}
-proc `<` (x, y: Millis): bool {.borrow.}
-proc `/` (x, y: Millis): float {.borrow.}
 
 type AnimChannel = ref object of RootObj
     xStart: float
@@ -25,12 +21,13 @@ proc newAnimChannel(x: float): AnimChannel =
 
 proc get(this: AnimChannel, now: Millis): float =
   ## now is assumed to never decrease.
-  if now > this.end:
-    return this.xGoal
+  if now >= this.end:
+    result = this.xGoal
   else:
     let dur = this.end - this.start
-    return (this.end - now) / dur * this.xStart +
-               (now - this.start) / dur * this.xGoal
+    result = (this.end - now) / dur * this.xStart +
+                 (now - this.start) / dur * this.xGoal
+  echo &"anim get now={now} start={this.start} end={this.end} -> {result}"
 
 proc animateTo(this: AnimChannel, now: Millis, x: float,
                rate: float) =
@@ -41,14 +38,16 @@ proc animateTo(this: AnimChannel, now: Millis, x: float,
   this.end = this.start + Millis(abs(x - this.xStart) / rate)
   this.xGoal = x
   
-
   
 type
   # rdf version uses urls here, but the python layer can map them to
   # ints.
   GroupId* = distinct int
-  Filename* = distinct cstring
 
+proc `==` (x, y: GroupId): bool {.borrow.}
+proc `$` (x: GroupId): string {.borrow.}
+
+type  
   Interp = enum
     slide, # move through the image to get to the new coordinates
     crossfade, # blend from start and end colors in rgb space
@@ -59,18 +58,16 @@ type
     x: AnimChannel
     y: AnimChannel
     height: AnimChannel
+    dir: Filename
     src: Filename
     srcGoal: Filename
-
-  OutputStrip* = ref object of RootObj
-    numLeds: int
-    groups: seq[ScanGroup]
     
   ScanGroupConfig* = tuple[id: GroupId, numLeds: int]
     
   
-proc newScanGroup(c: ScanGroupConfig): ScanGroup =
+proc newScanGroup(dir: Filename, c: ScanGroupConfig): ScanGroup =
   new result
+  result.dir = dir
   result.id = c.id
   result.numLeds = c.numLeds
   result.x = newAnimChannel(0)
@@ -78,12 +75,13 @@ proc newScanGroup(c: ScanGroupConfig): ScanGroup =
   result.height = newAnimChannel(cast[float](c.numLeds)) 
 
 proc currentColors(this: ScanGroup, now: Millis): seq[Color] =
-  let img = newImages("fs")
-  let col0 = img.getPixelColumn("img_spin.bin",
+  let img = newImages(this.dir)
+  let col0 = img.getPixelColumn(Filename("img_knob.bin"),
                                 toInt(this.x.get(now)),
                                 toInt(this.y.get(now)),
-                                toInt(this.height.get(now)))
+                                this.numLeds)#toInt(this.height.get(now)))
   result = col0
+  doAssert(result.len() == this.numLeds, &"result was {result.len}")
 
 proc animateTo(this: ScanGroup,
                now: Millis,
@@ -96,16 +94,21 @@ proc animateTo(this: ScanGroup,
   if isSome height: this.height.animateTo(now, height.get(), rate)
   this.srcGoal = src
 
-proc `==` (x, y: GroupId): bool {.borrow.}
-proc `$` (x: GroupId): string {.borrow.}
 
-  
-proc newOutputStrip*(numLeds: int): OutputStrip =
+
+type
+  OutputStrip* = ref object of RootObj
+    numLeds: int
+    groups: seq[ScanGroup]
+    dir: Filename
+
+proc newOutputStrip*(numLeds: int, dir: Filename): OutputStrip =
   new result
   result.numLeds = numLeds
+  result.dir = dir
   
 proc setupGroups*(this: OutputStrip, groups: seq[ScanGroupConfig]) =
-  this.groups = map(groups, newScanGroup)
+  this.groups = map(groups, proc (c: auto): auto = newScanGroup(this.dir, c))
   
 proc groupById(this: OutputStrip, id: GroupId): ScanGroup =
   for sg in this.groups:
