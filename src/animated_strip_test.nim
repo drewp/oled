@@ -16,7 +16,7 @@ suite "animated_strip":
     let s = newOutputStrip(numLeds=2, dir=Filename("fs"))
     s.setupGroups(@[(id: GroupId(1), numLeds: 2)])
     check:
-      s.currentColors(now=Millis(0)) == @[rgb(0, 0, 0), rgb(0, 0, 0)]
+      s.currentColors(now=Millis(0)) == @[parseColor("#E68206"), parseColor("#580B04")]
     
   test "animate":
     let s = newOutputStrip(numLeds=1, dir=Filename("fs"))
@@ -26,8 +26,8 @@ suite "animated_strip":
                 x=some(10.0), y=none(float), height=none(float),
                 src=Filename("demo.img"),
                 rate=1)
-    check(s.currentColors(now) == @[rgb(0, 0, 0)])
+    check(s.currentColors(now) == @[parseColor("#E68206")])
     s.step(now)
     now = Millis(1)
-    check(s.currentColors(now) == @[rgb(2, 0, 0)])
+    check(s.currentColors(now) == @[parseColor("#CE7406")])
     
