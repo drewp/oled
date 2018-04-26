@@ -51,6 +51,7 @@ def flash():
     push()
     
 def test(mod):
+    # ought to use a different nimcache dir
     check_call(['nim-0.18.0/bin/nim', 'c',
                 '--hint[Conf]:off',
                 '--hint[Processing]:off',

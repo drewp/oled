@@ -5,11 +5,13 @@ load('api_timer.js');
 load('api_dht.js');
 load('api_log.js');
 
-let _newLedPlayback = ffi('void* newLedPlayback(int, int)');
+let _newLedPlayback = ffi('void* newLedPlayback(int, int, char*)');
 let _playImage = ffi('void playImage(void*, char*)');
-function LedPlayback(pin, numLeds) {
-    this._c = _newLedPlayback(pin, numLeds);
-    this.playImage = function(filename) { _playImage(this._c, filename); };
+function LedPlayback(pin, numLeds, imageDir) {
+    let lp = Object.create({});
+    lp._c = _newLedPlayback(pin, numLeds, imageDir);
+    lp.playImage = function(filename) { _playImage(lp._c, filename); };
+    return lp;
 }
 
 let NimMain = ffi('void NimMain()');
@@ -32,7 +34,7 @@ function welcomeBlink() {
     }
 }
 
-let lp = newLedPlayback(/*pin=*/22, /*numPixels=*/8);
+let lp = LedPlayback(/*pin=*/22, /*numPixels=*/8, "");
 lp.playImage('img_spin.bin');
 Log.info('img done');
 

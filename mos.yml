@@ -14,7 +14,8 @@ tags:
 # List of files / directories with C sources. No slashes at the end of dir names.
 sources:
   - src/nimcache
-
+  - deps/mongoose-os/frozen
+  
 cflags:
   - "-Wno-error=unused-value"
   - "-Wno-error=parentheses"

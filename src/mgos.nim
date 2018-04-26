@@ -1,4 +1,7 @@
-const O_RDONLY*: cint = 0
+const
+  O_RDONLY*: cint = 0
+  SEEK_SET*: cint = 0
+    
 type
   mgos_gpio_mode* {.size: sizeof(cint).} = enum
     MGOS_GPIO_MODE_INPUT = 0, MGOS_GPIO_MODE_OUTPUT = 1, MGOS_GPIO_MODE_OUTPUT_OD = 2
@@ -27,6 +30,9 @@ proc mgos_gpio_write*(pin: cint; level: bool) {.importc: "mgos_gpio_write", head
 proc mgos_vfs_open*(filename: cstring; flags: cint; mode: cint): cint {. importc: "mgos_vfs_open", header: "mgos_vfs.h".}
 
 proc mgos_vfs_close*(vfd: cint): cint {.importc: "mgos_vfs_close", header: "mgos_vfs.h".}
+
+proc mgos_vfs_lseek*(vfd: cint, offset: cint, whence: cint): cint {.importc, header: "mgos_vfs.h".}
+
 proc mgos_vfs_read*(vfd: cint; dst: pointer; len: csize): csize {. importc: "mgos_vfs_read", header: "mgos_vfs.h".}
 proc mgos_usleep*(usecs: uint32) {.importc: "mgos_usleep", header: "mgos_system.h".}
 

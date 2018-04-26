@@ -4,6 +4,7 @@ import colors
 import options
 import strformat
 
+import thermlog
 import types
 import images
 
@@ -75,6 +76,7 @@ proc newScanGroup(dir: Filename, c: ScanGroupConfig): ScanGroup =
   result.height = newAnimChannel(cast[float](c.numLeds)) 
 
 proc currentColors(this: ScanGroup, now: Millis): seq[Color] =
+  log("group colors")
   let img = newImages(this.dir)
   let col0 = img.getPixelColumn(Filename("img_knob.bin"),
                                 toInt(this.x.get(now)),
@@ -100,12 +102,13 @@ type
   OutputStrip* = ref object of RootObj
     numLeds: int
     groups: seq[ScanGroup]
-    dir: Filename
+    dir*: Filename
 
 proc newOutputStrip*(numLeds: int, dir: Filename): OutputStrip =
   new result
   result.numLeds = numLeds
   result.dir = dir
+  
   
 proc setupGroups*(this: OutputStrip, groups: seq[ScanGroupConfig]) =
   this.groups = map(groups, proc (c: auto): auto = newScanGroup(this.dir, c))
@@ -126,8 +129,7 @@ proc animateTo*(this: OutputStrip, id: GroupId,
                                interpolate)
 
 proc updateOutput(this: OutputStrip) =
-  discard
-  
+  discard  
 proc step*(this: OutputStrip, now: Millis) =
   this.updateOutput()
 
